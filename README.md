@@ -1,6 +1,6 @@
 # Pune Metro Route Planner
 **Data Structures — Semester IV Mini Project**
-**Group 17 | Gopal Yadav & Mohit Dale**
+**Group 17 | Mohit Dale & Gopal Yadav**
 
 ---
 
