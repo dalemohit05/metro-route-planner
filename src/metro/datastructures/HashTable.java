@@ -131,7 +131,7 @@ public class HashTable<K, V> {
     // ── Private helpers ───────────────────────────────────────────────────────
 
     private int hash(K key) {
-        return Math.abs(key.hashCode() % capacity);
+        return (key.hashCode() & 0x7FFFFFFF) % capacity;
     }
 
     @SuppressWarnings("unchecked")
@@ -142,7 +142,7 @@ public class HashTable<K, V> {
             Node<K, V> curr = table[i];
             while (curr != null) {
                 Node<K, V> next   = curr.next;
-                int        newIdx = Math.abs(curr.key.hashCode() % newCap);
+                int        newIdx = (curr.key.hashCode() & 0x7FFFFFFF) % newCap;
                 curr.next         = newTable[newIdx];
                 newTable[newIdx]  = curr;
                 curr              = next;

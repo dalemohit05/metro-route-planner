@@ -215,7 +215,7 @@ public class Main {
             Station s     = metro.getStation(path[i]);
             String  label;
             if      (i == 0)              label = "  [START]";
-            else if (i == path.length -1) label = "  [ END ]";
+            else if (i == path.length - 1) label = "  [ END ]";
             else                          label = "         ";
 
             String nameStr = label + " " + s.getName() + "  [" + s.getLine() + "]";
