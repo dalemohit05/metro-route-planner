@@ -150,9 +150,9 @@ public class PuneMetro {
         }
     }
 
-    // ──────────────────────────────────────────────
+    // ─────────────────────────────────────────────
     // MENU HANDLERS
-    // ──────────────────────────────────────────────
+    // ─────────────────────────────────────────────
 
     static void routeMenu(String type) {
         String src  = getStationInput("Source Station");
