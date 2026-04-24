@@ -17,7 +17,7 @@
 //   - Stack      → path reversal
 //   - Queue      → BFS
 //   - MinHeap    → Dijkstra priority queue
-// ─────────────────────────────────────────────────
+// ────────────────────────────────────────────────
 
 public class Graph {
 
