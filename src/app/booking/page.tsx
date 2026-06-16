@@ -1,6 +1,7 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { STATIONS } from '@/lib/metro/data';
 import { bookTicket } from '@/lib/actions/booking';
@@ -26,6 +27,33 @@ export default function BookingPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [ticket, setTicket] = useState<TicketResult | null>(null);
+
+  const searchParams = useSearchParams();
+
+useEffect(() => {
+  const fromName = searchParams.get('fromName');
+  const toName = searchParams.get('toName');
+
+  if (fromName) {
+    const fromStation = STATIONS.find(
+      (station) => station.name === fromName
+    );
+
+    if (fromStation) {
+      setFrom(String(fromStation.id));
+    }
+  }
+
+  if (toName) {
+    const toStation = STATIONS.find(
+      (station) => station.name === toName
+    );
+
+    if (toStation) {
+      setTo(String(toStation.id));
+    }
+  }
+}, [searchParams]);
 
   async function handleBooking() {
     if (!from || !to || !date) {

@@ -52,6 +52,12 @@ export default async function DashboardPage() {
             <div className="font-semibold text-lg">Profile</div>
             <div className="text-gray-400 text-sm">Coming soon</div>
           </a>
+          <a href="/map"
+            className="bg-gray-900 hover:bg-gray-800 border border-gray-800 rounded-2xl p-6 transition-colors">
+           <div className="text-3xl mb-2">🌐</div>
+           <div className="text-gray-400 text-sm">Interactive metro map</div>
+           <div className="font-semibold text-lg">3D Map</div>
+          </a>
         </div>
 
       </div>
