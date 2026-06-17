@@ -58,6 +58,12 @@ export default async function DashboardPage() {
            <div className="text-gray-400 text-sm">Interactive metro map</div>
            <div className="font-semibold text-lg">3D Map</div>
           </a>
+          <a href="/admin"
+            className="bg-gray-900 hover:bg-gray-800 border border-gray-800 rounded-2xl p-6 transition-colors">
+           <div className="text-3xl mb-2">👑</div>
+           <div className="font-semibold text-lg">Admin Panel</div>
+           <div className="text-gray-400 text-sm">Manage system</div>
+         </a>
         </div>
 
       </div>
