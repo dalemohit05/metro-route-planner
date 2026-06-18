@@ -291,11 +291,11 @@ export default function PlannerPage() {
                 className="mt-6"
               >
                 <a
-                  href="/booking"
-                  className="block w-full bg-green-600 hover:bg-green-700 text-white font-semibold py-3 rounded-lg text-center transition-colors"
-                >
-                  Book Ticket - Rs. {result.totalFare}
-                </a>
+                 href={'/booking?fromName=' + STATIONS[parseInt(from)].name + '&toName=' + STATIONS[parseInt(to)].name}
+                 className="block w-full bg-green-600 hover:bg-green-700 text-white font-semibold py-3 rounded-lg text-center transition-colors"
+              >
+                 Book Ticket - Rs. {result.totalFare}
+              </a>
               </motion.div>
             </motion.div>
           )}
