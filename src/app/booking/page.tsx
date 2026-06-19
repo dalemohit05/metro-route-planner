@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect , Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { STATIONS } from '@/lib/metro/data';
@@ -20,7 +20,7 @@ interface TicketResult {
   bookingId: string;
 }
 
-export default function BookingPage() {
+function BookingForm() {
   const [from, setFrom] = useState('');
   const [to, setTo] = useState('');
   const [date, setDate] = useState('');
@@ -289,5 +289,16 @@ useEffect(() => {
         </AnimatePresence>
       </div>
     </main>
+  );
+}
+export default function BookingPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center" style={{ background: '#020817' }}>
+        <p className="text-gray-400">Loading...</p>
+      </div>
+    }>
+      <BookingForm />
+    </Suspense>
   );
 }
