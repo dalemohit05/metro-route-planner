@@ -1,6 +1,7 @@
 import { createServerSupabaseClient } from '@/lib/supabase/server';
 import { signOut } from '@/lib/actions/auth';
 import { redirect } from 'next/navigation';
+import Logo from '@/components/Logo';
 
 export default async function ProfilePage() {
   const supabase = await createServerSupabaseClient();
@@ -25,13 +26,7 @@ export default async function ProfilePage() {
       {/* Header */}
       <header style={{ background: 'rgba(8,12,28,0.8)', backdropFilter: 'blur(16px)', borderBottom: '1px solid rgba(255,255,255,0.07)' }} className="px-6 py-4">
         <div className="max-w-2xl mx-auto flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div style={{ width: '32px', height: '32px', borderRadius: '8px', background: 'linear-gradient(135deg, #6366f1, #8b5cf6)' }} className="flex items-center justify-center">🚇</div>
-            <div>
-              <div className="text-white font-bold text-sm">SD Metro</div>
-              <div className="text-xs" style={{ color: '#6366f1' }}>My Profile</div>
-            </div>
-          </div>
+          <Logo />
           <a href="/dashboard" className="text-gray-400 hover:text-white text-sm transition-colors">
             Dashboard
           </a>

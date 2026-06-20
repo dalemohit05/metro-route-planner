@@ -1,11 +1,13 @@
 'use client';
 
-import { useState, useEffect , Suspense } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { STATIONS } from '@/lib/metro/data';
 import { bookTicket } from '@/lib/actions/booking';
 import Image from 'next/image';
+import Logo from '@/components/Logo';
+import StationSelect from '@/components/StationSelect';
 
 interface TicketResult {
   ticketNumber: string;
@@ -21,6 +23,7 @@ interface TicketResult {
 }
 
 function BookingForm() {
+  const searchParams = useSearchParams();
   const [from, setFrom] = useState('');
   const [to, setTo] = useState('');
   const [date, setDate] = useState('');
@@ -28,32 +31,20 @@ function BookingForm() {
   const [error, setError] = useState('');
   const [ticket, setTicket] = useState<TicketResult | null>(null);
 
-  const searchParams = useSearchParams();
+  useEffect(() => {
+    const fromName = searchParams.get('fromName');
+    const toName = searchParams.get('toName');
 
-useEffect(() => {
-  const fromName = searchParams.get('fromName');
-  const toName = searchParams.get('toName');
-
-  if (fromName) {
-    const fromStation = STATIONS.find(
-      (station) => station.name === fromName
-    );
-
-    if (fromStation) {
-      setFrom(String(fromStation.id));
+    if (fromName) {
+      const fromStation = STATIONS.find((station) => station.name === fromName);
+      if (fromStation) setFrom(String(fromStation.id));
     }
-  }
 
-  if (toName) {
-    const toStation = STATIONS.find(
-      (station) => station.name === toName
-    );
-
-    if (toStation) {
-      setTo(String(toStation.id));
+    if (toName) {
+      const toStation = STATIONS.find((station) => station.name === toName);
+      if (toStation) setTo(String(toStation.id));
     }
-  }
-}, [searchParams]);
+  }, [searchParams]);
 
   async function handleBooking() {
     if (!from || !to || !date) {
@@ -85,143 +76,94 @@ useEffect(() => {
   const today = new Date().toISOString().split('T')[0];
 
   return (
-    <main className="min-h-screen bg-gray-950 text-white">
-      <motion.div
-        initial={{ opacity: 0, y: -20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="bg-gray-900 border-b border-gray-800 px-6 py-4"
-      >
-        <div className="max-w-4xl mx-auto flex items-center justify-between">
-          <h1 className="text-2xl font-bold text-blue-400">Book Ticket</h1>
-          <div className="flex gap-4">
-            <a href="/planner" className="text-gray-400 hover:text-white text-sm">
-              Planner
-            </a>
-            <a href="/dashboard" className="text-gray-400 hover:text-white text-sm">
-              Dashboard
-            </a>
+    <main className="min-h-screen text-white" style={{ background: 'radial-gradient(ellipse at 20% 0%, #0d1b3e 0%, #020817 60%)' }}>
+      <header style={{ background: 'rgba(8,12,28,0.8)', backdropFilter: 'blur(16px)', borderBottom: '1px solid rgba(255,255,255,0.07)' }} className="px-6 py-4">
+        <div className="max-w-2xl mx-auto flex items-center justify-between">
+          <Logo />
+          <div className="flex gap-4 text-sm">
+            <a href="/map" className="text-gray-400 hover:text-white transition-colors">Map</a>
+            <a href="/planner" className="text-gray-400 hover:text-white transition-colors">Planner</a>
+            <a href="/dashboard" className="text-gray-400 hover:text-white transition-colors">Dashboard</a>
           </div>
         </div>
-      </motion.div>
+      </header>
 
-      <div className="max-w-4xl mx-auto px-6 py-8">
+      <div className="max-w-2xl mx-auto px-6 py-8">
         <AnimatePresence mode="wait">
           {!ticket ? (
-            <motion.div
-              key="form"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20 }}
-            >
-              <div className="bg-gray-900 border border-gray-800 rounded-2xl p-6">
-                <h2 className="text-lg font-semibold mb-6">Journey Details</h2>
-                <div className="flex flex-col gap-4">
+            <motion.div key="form" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }}>
+              <div style={{ background: 'rgba(255,255,255,0.03)', backdropFilter: 'blur(20px)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: '20px', padding: '28px' }}>
+                <h2 className="text-lg font-semibold mb-6 text-white">Journey Details</h2>
+                <div className="flex flex-col gap-5">
 
                   <div>
-                    <label className="text-gray-400 text-sm block mb-1">
-                      From Station
-                    </label>
-                    <select
+                    <label style={{ color: '#475569', fontSize: '10px', fontWeight: '600', letterSpacing: '0.08em', textTransform: 'uppercase' }} className="block mb-2">From Station</label>
+                    <StationSelect
                       value={from}
-                      onChange={(e) => setFrom(e.target.value)}
-                      className="w-full bg-gray-800 text-white border border-gray-700 rounded-lg px-4 py-3 focus:outline-none focus:border-blue-500"
-                    >
-                      <option value="">Select source station</option>
-                      <optgroup label="Purple Line">
-                        {STATIONS.filter(
-                          (s) => s.line === 'purple' || s.line === 'interchange'
-                        ).map((s) => (
-                          <option key={s.id} value={s.id}>{s.name}</option>
-                        ))}
-                      </optgroup>
-                      <optgroup label="Aqua Line">
-                        {STATIONS.filter((s) => s.line === 'aqua').map((s) => (
-                          <option key={s.id} value={s.id}>{s.name}</option>
-                        ))}
-                      </optgroup>
-                    </select>
-                  </div>
-
-                  <div>
-                    <label className="text-gray-400 text-sm block mb-1">
-                      To Station
-                    </label>
-                    <select
-                      value={to}
-                      onChange={(e) => setTo(e.target.value)}
-                      className="w-full bg-gray-800 text-white border border-gray-700 rounded-lg px-4 py-3 focus:outline-none focus:border-blue-500"
-                    >
-                      <option value="">Select destination station</option>
-                      <optgroup label="Purple Line">
-                        {STATIONS.filter(
-                          (s) => s.line === 'purple' || s.line === 'interchange'
-                        ).map((s) => (
-                          <option key={s.id} value={s.id}>{s.name}</option>
-                        ))}
-                      </optgroup>
-                      <optgroup label="Aqua Line">
-                        {STATIONS.filter((s) => s.line === 'aqua').map((s) => (
-                          <option key={s.id} value={s.id}>{s.name}</option>
-                        ))}
-                      </optgroup>
-                    </select>
-                  </div>
-
-                  <div>
-                    <label className="text-gray-400 text-sm block mb-1">
-                      Journey Date
-                    </label>
-                    <input
-                      type="date"
-                      value={date}
-                      min={today}
-                      onChange={(e) => setDate(e.target.value)}
-                      className="w-full bg-gray-800 text-white border border-gray-700 rounded-lg px-4 py-3 focus:outline-none focus:border-blue-500"
+                      onChange={setFrom}
+                      placeholder="Select source station"
+                      stations={STATIONS}
+                      accentColor="#8b5cf6"
                     />
                   </div>
 
+                  <div>
+                    <label style={{ color: '#475569', fontSize: '10px', fontWeight: '600', letterSpacing: '0.08em', textTransform: 'uppercase' }} className="block mb-2">To Station</label>
+                    <StationSelect
+                      value={to}
+                      onChange={setTo}
+                      placeholder="Select destination station"
+                      stations={STATIONS}
+                      accentColor="#06b6d4"
+                    />
+                  </div>
+
+                  <div>
+                    <label style={{ color: '#475569', fontSize: '10px', fontWeight: '600', letterSpacing: '0.08em', textTransform: 'uppercase' }} className="block mb-2">Journey Date</label>
+                    <input type="date" value={date} min={today} onChange={(e) => setDate(e.target.value)}
+                      style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.09)', color: date ? 'white' : '#64748b' }}
+                      className="w-full rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all" />
+                  </div>
+
                   {error && (
-                    <p className="text-red-400 text-sm bg-red-950 border border-red-800 rounded-lg px-4 py-2">
-                      {error}
-                    </p>
+                    <div style={{ background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.2)', borderRadius: '10px' }} className="px-4 py-3">
+                      <p className="text-red-400 text-sm">{error}</p>
+                    </div>
                   )}
 
-                  <button
-                    onClick={handleBooking}
-                    disabled={loading}
-                    className="w-full bg-green-600 hover:bg-green-700 disabled:bg-green-900 text-white font-semibold py-3 rounded-lg transition-colors"
-                  >
+                  <motion.button onClick={handleBooking} disabled={loading}
+                    whileHover={{ scale: 1.02, boxShadow: '0 8px 24px rgba(16,185,129,0.25)' }}
+                    whileTap={{ scale: 0.98 }}
+                    style={{ background: 'linear-gradient(135deg, #059669, #047857)', border: 'none', borderRadius: '12px', color: 'white', fontWeight: '600', fontSize: '14px', padding: '14px', cursor: loading ? 'not-allowed' : 'pointer', opacity: loading ? 0.7 : 1 }}>
                     {loading ? 'Booking...' : 'Book Ticket'}
-                  </button>
+                  </motion.button>
                 </div>
               </div>
             </motion.div>
           ) : (
-            <motion.div
-              key="ticket"
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ duration: 0.4 }}
-            >
-              <div className="bg-gray-900 border border-gray-800 rounded-2xl overflow-hidden">
-
-                <div className="bg-blue-600 px-6 py-4">
+            <motion.div key="ticket" initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.4 }}>
+              <div style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: '20px', overflow: 'hidden' }}>
+                <div style={{ background: 'linear-gradient(135deg, #4f46e5, #7c3aed)', padding: '20px 24px' }}>
                   <div className="flex items-center justify-between">
-                    <h2 className="text-xl font-bold">Pune Metro</h2>
-                    <span className="text-blue-200 text-sm">e-Ticket</span>
+                    <div>
+                      <h2 className="text-xl font-bold text-white font-devanagari">मेट्रोमित्र</h2>
+                      <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: '12px', marginTop: '2px' }}>e-Ticket</p>
+                    </div>
+                    <div style={{ background: 'rgba(255,255,255,0.1)', borderRadius: '8px', padding: '6px 12px' }}>
+                      <span style={{ color: 'rgba(255,255,255,0.8)', fontSize: '11px', fontFamily: 'monospace' }}>{ticket.ticketNumber}</span>
+                    </div>
                   </div>
-                  <p className="text-blue-200 text-sm mt-1">{ticket.ticketNumber}</p>
                 </div>
 
                 <div className="p-6">
                   <div className="flex items-center justify-between mb-6">
-                    <div className="text-center">
-                      <p className="text-gray-400 text-xs mb-1">FROM</p>
+                    <div>
+                      <p style={{ color: '#475569', fontSize: '10px', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '4px' }}>From</p>
                       <p className="text-white font-bold text-lg">{ticket.from}</p>
                     </div>
-                    <div className="text-gray-600 text-2xl">to</div>
-                    <div className="text-center">
-                      <p className="text-gray-400 text-xs mb-1">TO</p>
+                    <div style={{ color: '#334155', fontSize: '24px' }}>→</div>
+                    <div className="text-right">
+                      <p style={{ color: '#475569', fontSize: '10px', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '4px' }}>To</p>
                       <p className="text-white font-bold text-lg">{ticket.to}</p>
                     </div>
                   </div>
@@ -232,55 +174,37 @@ useEffect(() => {
                       { label: 'Distance', value: ticket.distance + ' km' },
                       { label: 'Time', value: ticket.time + ' min' },
                       { label: 'Stops', value: '' + ticket.stops },
-                    ].map((s) => (
-                      <div key={s.label} className="bg-gray-800 rounded-xl p-3 text-center">
+                    ].map(s => (
+                      <div key={s.label} style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: '10px', padding: '10px', textAlign: 'center' }}>
                         <p className="text-white font-bold text-sm">{s.value}</p>
-                        <p className="text-gray-400 text-xs">{s.label}</p>
+                        <p style={{ color: '#475569', fontSize: '10px', marginTop: '2px' }}>{s.label}</p>
                       </div>
                     ))}
                   </div>
 
-                  <div className="text-center mb-2">
-                    <p className="text-gray-400 text-sm">Journey Date: {ticket.date}</p>
+                  <div className="text-center mb-4">
+                    <p style={{ color: '#64748b', fontSize: '12px' }}>Journey Date: <span className="text-white">{ticket.date}</span></p>
                   </div>
 
-                  <div className="border-t border-dashed border-gray-700 my-6" />
+                  <div style={{ borderTop: '1px dashed rgba(255,255,255,0.08)', margin: '20px 0' }} />
 
                   <div className="flex flex-col items-center">
-                    <p className="text-gray-400 text-sm mb-4">
-                      Show this QR code at the station
-                    </p>
-                    <div className="bg-white p-4 rounded-2xl">
-                      <Image
-                        src={ticket.qrCode}
-                        alt="Ticket QR Code"
-                        width={200}
-                        height={200}
-                      />
+                    <p style={{ color: '#64748b', fontSize: '12px', marginBottom: '16px' }}>Show this QR code at the station</p>
+                    <div style={{ background: 'white', padding: '16px', borderRadius: '16px' }}>
+                      <Image src={ticket.qrCode} alt="Ticket QR Code" width={180} height={180} />
                     </div>
-                    <p className="text-gray-500 text-xs mt-3">
-                      Valid for journey date only
-                    </p>
+                    <p style={{ color: '#334155', fontSize: '11px', marginTop: '12px' }}>Valid for journey date only</p>
                   </div>
                 </div>
               </div>
 
-              <div className="flex gap-4 mt-4">
-                <button
-                  onClick={() => {
-                    setTicket(null);
-                    setFrom('');
-                    setTo('');
-                    setDate('');
-                  }}
-                  className="flex-1 bg-gray-800 hover:bg-gray-700 text-white py-3 rounded-lg transition-colors"
-                >
+              <div className="flex gap-3 mt-4">
+                <button onClick={() => { setTicket(null); setFrom(''); setTo(''); setDate(''); }}
+                  style={{ flex: 1, background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '12px', color: '#94a3b8', fontSize: '13px', fontWeight: '600', padding: '13px', cursor: 'pointer' }}>
                   Book Another
                 </button>
-                <a
-                  href="/dashboard"
-                  className="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-lg text-center transition-colors"
-                >
+                <a href="/dashboard"
+                  style={{ flex: 1, background: 'linear-gradient(135deg, #6366f1, #4f46e5)', borderRadius: '12px', color: 'white', fontSize: '13px', fontWeight: '600', padding: '13px', textAlign: 'center', textDecoration: 'none', display: 'block' }}>
                   Dashboard
                 </a>
               </div>
@@ -291,6 +215,7 @@ useEffect(() => {
     </main>
   );
 }
+
 export default function BookingPage() {
   return (
     <Suspense fallback={

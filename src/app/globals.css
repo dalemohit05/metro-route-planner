@@ -1,1 +1,7 @@
 @import "tailwindcss";
+.font-devanagari {
+  font-family: var(--font-devanagari), sans-serif;
+}
+.font-devanagari {
+  font-family: var(--font-devanagari), sans-serif;
+}

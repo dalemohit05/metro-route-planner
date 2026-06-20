@@ -3,6 +3,8 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { STATIONS } from '@/lib/metro/data';
+import Logo from '@/components/Logo';
+import StationSelect from '@/components/StationSelect';
 
 interface Station {
   id: number;
@@ -37,12 +39,15 @@ export default function PlannerPage() {
       setError('Source and destination cannot be the same');
       return;
     }
+
     setLoading(true);
     setError('');
     setResult(null);
+
     try {
       const res = await fetch('/api/route?from=' + from + '&to=' + to);
       const data = await res.json();
+
       if (!res.ok) {
         setError(data.error || 'Something went wrong');
       } else {
@@ -75,64 +80,54 @@ export default function PlannerPage() {
   }
 
   return (
-    <main className="min-h-screen bg-gray-950 text-white">
-      <motion.div
-        initial={{ opacity: 0, y: -20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="bg-gray-900 border-b border-gray-800 px-6 py-4"
-      >
+    <main className="min-h-screen text-white"
+      style={{ background: 'radial-gradient(ellipse at 20% 0%, #0d1b3e 0%, #020817 60%)' }}>
+
+      <header style={{ background: 'rgba(8,12,28,0.8)', backdropFilter: 'blur(16px)', borderBottom: '1px solid rgba(255,255,255,0.07)' }}
+        className="px-6 py-4">
         <div className="max-w-4xl mx-auto flex items-center justify-between">
-          <h1 className="text-2xl font-bold text-blue-400">Metro Planner</h1>
-          <a href="/dashboard" className="text-gray-400 hover:text-white text-sm">
-            Dashboard
-          </a>
+          <Logo />
+          <div className="flex gap-4 text-sm">
+            <a href="/map" className="text-gray-400 hover:text-white transition-colors">Map</a>
+            <a href="/booking" className="text-gray-400 hover:text-white transition-colors">Book</a>
+            <a href="/dashboard" className="text-gray-400 hover:text-white transition-colors">Dashboard</a>
+          </div>
         </div>
-      </motion.div>
+      </header>
 
       <div className="max-w-4xl mx-auto px-6 py-8">
+
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1 }}
-          className="bg-gray-900 border border-gray-800 rounded-2xl p-6 mb-6"
+          style={{ background: 'rgba(255,255,255,0.03)', backdropFilter: 'blur(20px)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: '20px' }}
+          className="p-6 mb-6"
         >
           <h2 className="text-lg font-semibold text-white mb-4">
             Plan Your Journey
           </h2>
+
           <div className="flex flex-col gap-4">
+
             <div>
               <label className="text-gray-400 text-sm block mb-1">
                 From Station
               </label>
-              <select
+              <StationSelect
                 value={from}
-                onChange={(e) => setFrom(e.target.value)}
-                className="w-full bg-gray-800 text-white border border-gray-700 rounded-lg px-4 py-3 focus:outline-none focus:border-blue-500"
-              >
-                <option value="">Select source station</option>
-                <optgroup label="Purple Line">
-                  {STATIONS.filter(
-                    (s) => s.line === 'purple' || s.line === 'interchange'
-                  ).map((s) => (
-                    <option key={s.id} value={s.id}>
-                      {s.name}
-                    </option>
-                  ))}
-                </optgroup>
-                <optgroup label="Aqua Line">
-                  {STATIONS.filter((s) => s.line === 'aqua').map((s) => (
-                    <option key={s.id} value={s.id}>
-                      {s.name}
-                    </option>
-                  ))}
-                </optgroup>
-              </select>
+                onChange={setFrom}
+                placeholder="Select source station"
+                stations={STATIONS}
+                accentColor="#8b5cf6"
+              />
             </div>
 
             <div className="flex justify-center">
               <button
                 onClick={handleSwap}
-                className="bg-gray-800 hover:bg-gray-700 border border-gray-700 text-white px-6 py-2 rounded-full text-sm transition-colors"
+                style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.09)' }}
+                className="text-white px-6 py-2 rounded-full text-sm transition-colors"
               >
                 Swap
               </button>
@@ -142,29 +137,13 @@ export default function PlannerPage() {
               <label className="text-gray-400 text-sm block mb-1">
                 To Station
               </label>
-              <select
+              <StationSelect
                 value={to}
-                onChange={(e) => setTo(e.target.value)}
-                className="w-full bg-gray-800 text-white border border-gray-700 rounded-lg px-4 py-3 focus:outline-none focus:border-blue-500"
-              >
-                <option value="">Select destination station</option>
-                <optgroup label="Purple Line">
-                  {STATIONS.filter(
-                    (s) => s.line === 'purple' || s.line === 'interchange'
-                  ).map((s) => (
-                    <option key={s.id} value={s.id}>
-                      {s.name}
-                    </option>
-                  ))}
-                </optgroup>
-                <optgroup label="Aqua Line">
-                  {STATIONS.filter((s) => s.line === 'aqua').map((s) => (
-                    <option key={s.id} value={s.id}>
-                      {s.name}
-                    </option>
-                  ))}
-                </optgroup>
-              </select>
+                onChange={setTo}
+                placeholder="Select destination station"
+                stations={STATIONS}
+                accentColor="#06b6d4"
+              />
             </div>
 
             {error && (
@@ -173,13 +152,17 @@ export default function PlannerPage() {
               </p>
             )}
 
-            <button
+            <motion.button
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
               onClick={handleSearch}
               disabled={loading}
-              className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-blue-900 text-white font-semibold py-3 rounded-lg transition-colors"
+              style={{ background: 'linear-gradient(135deg, #6366f1, #4f46e5)' }}
+              className="w-full text-white font-semibold py-3 rounded-lg transition-all disabled:opacity-60"
             >
               {loading ? 'Calculating...' : 'Find Route'}
-            </button>
+            </motion.button>
+
           </div>
         </motion.div>
 
@@ -191,6 +174,7 @@ export default function PlannerPage() {
               exit={{ opacity: 0, y: -30 }}
               transition={{ duration: 0.4 }}
             >
+
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
                 {[
                   { label: 'Distance', value: result.totalDistance + ' km' },
@@ -203,7 +187,8 @@ export default function PlannerPage() {
                     initial={{ opacity: 0, scale: 0.9 }}
                     animate={{ opacity: 1, scale: 1 }}
                     transition={{ delay: i * 0.1 }}
-                    className="bg-gray-900 border border-gray-800 rounded-xl p-4 text-center"
+                    style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}
+                    className="rounded-xl p-4 text-center"
                   >
                     <div className="text-xl font-bold text-white">{stat.value}</div>
                     <div className="text-gray-400 text-sm">{stat.label}</div>
@@ -216,7 +201,8 @@ export default function PlannerPage() {
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   transition={{ delay: 0.3 }}
-                  className="bg-yellow-950 border border-yellow-800 rounded-xl p-4 mb-6"
+                  style={{ background: 'rgba(251,191,36,0.08)', border: '1px solid rgba(251,191,36,0.15)' }}
+                  className="rounded-xl p-4 mb-6"
                 >
                   <p className="text-yellow-400 font-medium">
                     Interchange at: {result.interchanges.join(', ')}
@@ -227,7 +213,8 @@ export default function PlannerPage() {
                 </motion.div>
               )}
 
-              <div className="bg-gray-900 border border-gray-800 rounded-2xl p-6">
+              <div style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)' }}
+                className="rounded-2xl p-6">
                 <h3 className="text-lg font-semibold text-white mb-4">Route Path</h3>
                 <div>
                   {result.path.map((station, index) => (
@@ -291,15 +278,18 @@ export default function PlannerPage() {
                 className="mt-6"
               >
                 <a
-                 href={'/booking?fromName=' + STATIONS[parseInt(from)].name + '&toName=' + STATIONS[parseInt(to)].name}
-                 className="block w-full bg-green-600 hover:bg-green-700 text-white font-semibold py-3 rounded-lg text-center transition-colors"
-              >
-                 Book Ticket - Rs. {result.totalFare}
-              </a>
+                  href={'/booking?fromName=' + STATIONS.find(s => String(s.id) === from)?.name + '&toName=' + STATIONS.find(s => String(s.id) === to)?.name}
+                  style={{ background: 'linear-gradient(135deg, #059669, #047857)' }}
+                  className="block w-full text-white font-semibold py-3 rounded-lg text-center transition-colors"
+                >
+                  Book Ticket - Rs. {result.totalFare}
+                </a>
               </motion.div>
+
             </motion.div>
           )}
         </AnimatePresence>
+
       </div>
     </main>
   );

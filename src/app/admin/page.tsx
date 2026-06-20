@@ -1,10 +1,10 @@
 import { createServerSupabaseClient } from '@/lib/supabase/server';
 import { signOut } from '@/lib/actions/auth';
+import Logo from '@/components/Logo';
 
 export default async function AdminPage() {
   const supabase = await createServerSupabaseClient();
 
-  // Get all stats in parallel
   const [
     { count: totalUsers },
     { count: totalBookings },
@@ -33,15 +33,11 @@ export default async function AdminPage() {
       <header style={{ background: 'rgba(8,12,28,0.8)', backdropFilter: 'blur(16px)', borderBottom: '1px solid rgba(255,255,255,0.07)' }}
         className="px-6 py-4 sticky top-0 z-50">
         <div className="max-w-7xl mx-auto flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div style={{ width: '32px', height: '32px', borderRadius: '8px', background: 'linear-gradient(135deg, #6366f1, #8b5cf6)' }}
-              className="flex items-center justify-center">🚇</div>
-            <div>
-              <div className="text-white font-bold text-sm">SD Metro</div>
-              <div className="text-xs" style={{ color: '#f59e0b' }}>Admin Panel</div>
-            </div>
-          </div>
+          <Logo showTagline={false} />
           <div className="flex items-center gap-4">
+            <span style={{ color: '#f59e0b', fontSize: '11px', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+              Admin Panel
+            </span>
             <a href="/dashboard" className="text-gray-400 hover:text-white text-sm transition-colors">
               User View
             </a>
@@ -60,7 +56,7 @@ export default async function AdminPage() {
         {/* Page Title */}
         <div className="mb-8">
           <h1 className="text-2xl font-bold text-white">Admin Dashboard</h1>
-          <p className="text-gray-500 text-sm mt-1">Overview of SD Metro operations</p>
+          <p className="text-gray-500 text-sm mt-1 font-devanagari">मेट्रोमित्र Operations Overview</p>
         </div>
 
         {/* Stats Cards */}
@@ -175,7 +171,7 @@ export default async function AdminPage() {
         {/* Quick Links */}
         <div className="mt-6 grid grid-cols-3 gap-4">
           {[
-            { label: 'View Metro Map', href: '/map', icon: '🗺️', desc: 'Interactive 3D map' },
+            { label: 'View Metro Map', href: '/map', icon: '🗺️', desc: 'Interactive metro map' },
             { label: 'Route Planner', href: '/planner', icon: '📍', desc: 'Plan routes' },
             { label: 'Book Ticket', href: '/booking', icon: '🎫', desc: 'New booking' },
           ].map(link => (

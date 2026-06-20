@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import Logo from './Logo';
 
 const PURPLE_LINE = [
   'PCMC','Sant Tukaram Nagar','Bhosari','Kasarwadi','Phugewadi',
@@ -61,8 +62,12 @@ function buildPoints(stations: string[]) {
   return stations.filter(s => POSITIONS[s]).map(s => POSITIONS[s].x + ',' + POSITIONS[s].y).join(' ');
 }
 
-// Animated train that moves station by station, disappears at end, reappears at start
-function Train({ line, color, fillColor, speed = 1200 }: { line: string[]; color: string; fillColor: string; speed?: number }) {
+function Train({ line, color, fillColor, speed = 1200 }: {
+  line: string[];
+  color: string;
+  fillColor: string;
+  speed?: number;
+}) {
   const [index, setIndex] = useState(0);
   const [visible, setVisible] = useState(true);
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -72,13 +77,12 @@ function Train({ line, color, fillColor, speed = 1200 }: { line: string[]; color
       setIndex(prev => {
         const next = prev + 1;
         if (next >= line.length) {
-          // Reached last station — hide train, wait, then restart from 0
           setVisible(false);
           timerRef.current = setTimeout(() => {
             setIndex(0);
             setVisible(true);
-          }, 1500); // pause before reappearing
-          return prev; // stay at last index while hiding
+          }, 1500);
+          return prev;
         }
         return next;
       });
@@ -139,15 +143,17 @@ export default function MetroMap3D() {
     setFrom(name); setTo(''); setResult(null); setHighlightedPath([]);
   }
 
-  // Build booking URL with pre-filled values
   function buildBookingUrl() {
-  const params = new URLSearchParams();
-  if (from) params.set('fromName', from);
-  if (to) params.set('toName', to);
-  return '/booking?' + params.toString();
-}
+    const params = new URLSearchParams();
+    if (from) params.set('fromName', from);
+    if (to) params.set('toName', to);
+    return '/booking?' + params.toString();
+  }
 
-  const highlightPoints = highlightedPath.filter(s => POSITIONS[s]).map(s => POSITIONS[s].x + ',' + POSITIONS[s].y).join(' ');
+  const highlightPoints = highlightedPath
+    .filter(s => POSITIONS[s])
+    .map(s => POSITIONS[s].x + ',' + POSITIONS[s].y)
+    .join(' ');
 
   return (
     <div style={{ background: 'radial-gradient(ellipse at 20% 0%, #0d1b3e 0%, #020817 60%)', minHeight: '100vh', fontFamily: 'system-ui, -apple-system, sans-serif' }}>
@@ -155,13 +161,7 @@ export default function MetroMap3D() {
       {/* Header */}
       <header style={{ background: 'rgba(8,12,28,0.8)', backdropFilter: 'blur(16px)', borderBottom: '1px solid rgba(255,255,255,0.07)', position: 'sticky', top: 0, zIndex: 50 }}>
         <div style={{ maxWidth: '1280px', margin: '0 auto', padding: '0 24px', height: '56px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-            <div style={{ width: '32px', height: '32px', borderRadius: '8px', background: 'linear-gradient(135deg, #6366f1, #8b5cf6)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '16px' }}>🚇</div>
-            <div>
-              <div style={{ color: 'white', fontWeight: '700', fontSize: '15px', letterSpacing: '-0.02em', lineHeight: '1' }}>SD Metro</div>
-              <div style={{ color: '#6366f1', fontSize: '10px', letterSpacing: '0.05em', textTransform: 'uppercase', marginTop: '2px' }}>Smart Route Planning</div>
-            </div>
-          </div>
+          <Logo showTagline taglineLang="en" />
           <nav style={{ display: 'flex', gap: '4px' }}>
             {[{ label: 'Dashboard', href: '/dashboard' }, { label: 'Book Ticket', href: '/booking' }].map(item => (
               <a key={item.label} href={item.href}
@@ -180,6 +180,7 @@ export default function MetroMap3D() {
         {/* Planner Controls */}
         <div style={{ background: 'rgba(255,255,255,0.03)', backdropFilter: 'blur(20px)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: '16px', padding: '16px 20px', marginBottom: '16px' }}>
           <div style={{ display: 'flex', gap: '12px', alignItems: 'flex-end', flexWrap: 'wrap' }}>
+
             <div style={{ flex: 1, minWidth: '180px' }}>
               <label style={{ color: '#475569', fontSize: '10px', fontWeight: '600', letterSpacing: '0.08em', textTransform: 'uppercase', display: 'block', marginBottom: '8px' }}>Origin</label>
               <select value={from} onChange={e => setFrom(e.target.value)}
@@ -236,15 +237,12 @@ export default function MetroMap3D() {
                   <line key={'v' + i} x1={i * 80} y1="0" x2={i * 80} y2="560" stroke="rgba(255,255,255,0.025)" strokeWidth="1" />
                 ))}
 
-                {/* Purple line */}
                 <polyline points={buildPoints(PURPLE_LINE)} fill="none" stroke="#7c3aed" strokeWidth="16" strokeLinecap="round" strokeLinejoin="round" opacity="0.12" />
                 <polyline points={buildPoints(PURPLE_LINE)} fill="none" stroke="#8b5cf6" strokeWidth="7" strokeLinecap="round" strokeLinejoin="round" opacity="0.95" />
 
-                {/* Aqua line */}
                 <polyline points={buildPoints(AQUA_LINE)} fill="none" stroke="#0891b2" strokeWidth="16" strokeLinecap="round" strokeLinejoin="round" opacity="0.12" />
                 <polyline points={buildPoints(AQUA_LINE)} fill="none" stroke="#06b6d4" strokeWidth="7" strokeLinecap="round" strokeLinejoin="round" opacity="0.95" />
 
-                {/* Highlighted route with draw animation */}
                 {highlightedPath.length > 1 && (
                   <motion.polyline
                     key={routeKey}
@@ -258,11 +256,9 @@ export default function MetroMap3D() {
                   />
                 )}
 
-                {/* Trains — smooth one-way, disappear at end, reappear at start */}
                 <Train line={PURPLE_LINE} color="#6d28d9" fillColor="#a78bfa" speed={1100} />
                 <Train line={AQUA_LINE} color="#0e7490" fillColor="#67e8f9" speed={1300} />
 
-                {/* Stations */}
                 {ALL_STATIONS.map((name) => {
                   const pos = POSITIONS[name];
                   if (!pos) return null;
@@ -309,7 +305,6 @@ export default function MetroMap3D() {
               </svg>
             </div>
 
-            {/* Floating Legend */}
             <div style={{ position: 'absolute', bottom: '16px', left: '16px', background: 'rgba(8,12,28,0.88)', backdropFilter: 'blur(12px)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '12px', padding: '10px 14px' }}>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
                 {[{ color: '#8b5cf6', label: 'Purple Line' }, { color: '#06b6d4', label: 'Aqua Line' }, { color: '#fbbf24', label: 'Interchange' }].map(item => (
@@ -386,7 +381,6 @@ export default function MetroMap3D() {
                     })}
                   </div>
 
-                  {/* Book Ticket — passes from/to as URL params */}
                   <motion.a
                     href={buildBookingUrl()}
                     whileHover={{ scale: 1.02, boxShadow: '0 8px 24px rgba(16,185,129,0.25)' }}
