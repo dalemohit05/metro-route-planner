@@ -21,10 +21,11 @@ export default function StationSelect({
   onChange,
   placeholder,
   stations,
-  accentColor = '#8b5cf6',
+  accentColor,
 }: StationSelectProps) {
   const [open, setOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
+  const resolvedAccent = accentColor || 'var(--accent-purple)';
 
   useEffect(() => {
     function handleClickOutside(e: MouseEvent) {
@@ -42,9 +43,9 @@ export default function StationSelect({
   const aquaStations = stations.filter((s) => s.line === 'aqua');
 
   function lineColor(line: string) {
-    if (line === 'interchange') return '#fbbf24';
-    if (line === 'purple') return '#8b5cf6';
-    return '#06b6d4';
+    if (line === 'interchange') return 'var(--accent-amber)';
+    if (line === 'purple') return 'var(--accent-purple)';
+    return 'var(--accent-cyan)';
   }
 
   return (
@@ -55,10 +56,10 @@ export default function StationSelect({
         onClick={() => setOpen((o) => !o)}
         style={{
           width: '100%',
-          background: 'rgba(255,255,255,0.05)',
-          border: open ? `1px solid ${accentColor}` : '1px solid rgba(255,255,255,0.09)',
+          background: 'var(--bg-input)',
+          border: open ? `1px solid ${resolvedAccent}` : '1px solid var(--border-input)',
           borderRadius: '10px',
-          color: selectedStation ? 'white' : '#64748b',
+          color: selectedStation ? 'var(--text-primary)' : 'var(--text-placeholder)',
           fontSize: '13px',
           padding: '10px 14px',
           display: 'flex',
@@ -85,7 +86,7 @@ export default function StationSelect({
             {selectedStation ? selectedStation.name : placeholder}
           </span>
         </span>
-        <span style={{ color: '#64748b', fontSize: '11px', flexShrink: 0, marginLeft: '8px' }}>
+        <span style={{ color: 'var(--text-tertiary)', fontSize: '11px', flexShrink: 0, marginLeft: '8px' }}>
           {open ? '▲' : '▼'}
         </span>
       </button>
@@ -98,10 +99,10 @@ export default function StationSelect({
             top: 'calc(100% + 6px)',
             left: 0,
             right: 0,
-            background: '#0d1424',
-            border: '1px solid rgba(255,255,255,0.1)',
+            background: 'var(--bg-dropdown)',
+            border: '1px solid var(--border-strong)',
             borderRadius: '12px',
-            boxShadow: '0 12px 32px rgba(0,0,0,0.5)',
+            boxShadow: 'var(--shadow-card)',
             maxHeight: '280px',
             overflowY: 'auto',
             zIndex: 100,
@@ -110,7 +111,7 @@ export default function StationSelect({
         >
           {purpleStations.length > 0 && (
             <>
-              <div style={{ color: '#475569', fontSize: '10px', fontWeight: 600, letterSpacing: '0.06em', textTransform: 'uppercase', padding: '8px 10px 4px' }}>
+              <div style={{ color: 'var(--text-muted)', fontSize: '10px', fontWeight: 600, letterSpacing: '0.06em', textTransform: 'uppercase', padding: '8px 10px 4px' }}>
                 Purple Line
               </div>
               {purpleStations.map((s) => (
@@ -123,18 +124,18 @@ export default function StationSelect({
                     display: 'flex',
                     alignItems: 'center',
                     gap: '8px',
-                    background: String(s.id) === value ? 'rgba(139,92,246,0.12)' : 'transparent',
+                    background: String(s.id) === value ? 'color-mix(in srgb, var(--accent-purple) 12%, transparent)' : 'transparent',
                     border: 'none',
                     borderRadius: '8px',
-                    color: String(s.id) === value ? 'white' : '#cbd5e1',
+                    color: String(s.id) === value ? 'var(--text-primary)' : 'var(--text-secondary)',
                     fontSize: '13px',
                     padding: '9px 10px',
                     cursor: 'pointer',
                     textAlign: 'left',
                     transition: 'background 0.1s',
                   }}
-                  onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.06)'; }}
-                  onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = String(s.id) === value ? 'rgba(139,92,246,0.12)' : 'transparent'; }}
+                  onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = 'var(--bg-card-hover)'; }}
+                  onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = String(s.id) === value ? 'color-mix(in srgb, var(--accent-purple) 12%, transparent)' : 'transparent'; }}
                 >
                   <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: lineColor(s.line), flexShrink: 0 }} />
                   {s.name}
@@ -145,7 +146,7 @@ export default function StationSelect({
 
           {aquaStations.length > 0 && (
             <>
-              <div style={{ color: '#475569', fontSize: '10px', fontWeight: 600, letterSpacing: '0.06em', textTransform: 'uppercase', padding: '10px 10px 4px' }}>
+              <div style={{ color: 'var(--text-muted)', fontSize: '10px', fontWeight: 600, letterSpacing: '0.06em', textTransform: 'uppercase', padding: '10px 10px 4px' }}>
                 Aqua Line
               </div>
               {aquaStations.map((s) => (
@@ -158,18 +159,18 @@ export default function StationSelect({
                     display: 'flex',
                     alignItems: 'center',
                     gap: '8px',
-                    background: String(s.id) === value ? 'rgba(6,182,212,0.12)' : 'transparent',
+                    background: String(s.id) === value ? 'color-mix(in srgb, var(--accent-cyan) 12%, transparent)' : 'transparent',
                     border: 'none',
                     borderRadius: '8px',
-                    color: String(s.id) === value ? 'white' : '#cbd5e1',
+                    color: String(s.id) === value ? 'var(--text-primary)' : 'var(--text-secondary)',
                     fontSize: '13px',
                     padding: '9px 10px',
                     cursor: 'pointer',
                     textAlign: 'left',
                     transition: 'background 0.1s',
                   }}
-                  onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.06)'; }}
-                  onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = String(s.id) === value ? 'rgba(6,182,212,0.12)' : 'transparent'; }}
+                  onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = 'var(--bg-card-hover)'; }}
+                  onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = String(s.id) === value ? 'color-mix(in srgb, var(--accent-cyan) 12%, transparent)' : 'transparent'; }}
                 >
                   <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: lineColor(s.line), flexShrink: 0 }} />
                   {s.name}

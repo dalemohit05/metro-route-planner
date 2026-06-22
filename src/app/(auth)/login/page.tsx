@@ -3,6 +3,8 @@
 import { useState } from 'react';
 import { signIn } from '@/lib/actions/auth';
 import Link from 'next/link';
+import Logo from '@/components/Logo';
+import ThemeToggle from '@/components/ThemeToggle';
 
 export default function LoginPage() {
   const [error, setError] = useState('');
@@ -19,30 +21,43 @@ export default function LoginPage() {
   }
 
   return (
-    <main className="min-h-screen flex items-center justify-center bg-gray-950">
-      <div className="bg-gray-900 p-8 rounded-2xl w-full max-w-md border border-gray-800">
+    <main
+      className="min-h-screen flex items-center justify-center relative"
+      style={{ background: 'var(--bg-page)' }}
+    >
+      <div style={{ position: 'absolute', top: '20px', right: '20px' }}>
+        <ThemeToggle />
+      </div>
 
-        <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-white">🚇 Metro Planner</h1>
-          <p className="text-gray-400 mt-2">Welcome back!</p>
+      <div
+        style={{ background: 'var(--bg-card)', backdropFilter: 'blur(20px)', border: '1px solid var(--border-subtle)' }}
+        className="p-8 rounded-2xl w-full max-w-md"
+      >
+        {/* Header */}
+        <div className="flex flex-col items-center mb-8">
+          <Logo size="lg" showTagline taglineLang="hi" />
+          <p style={{ color: 'var(--text-secondary)' }} className="mt-4 text-sm">Welcome back!</p>
         </div>
 
+        {/* Form */}
         <form action={handleSubmit} className="space-y-4">
+
           <div>
-            <label className="text-gray-300 text-sm font-medium block mb-1">
+            <label style={{ color: 'var(--text-secondary)' }} className="text-sm font-medium block mb-1">
               Email
             </label>
             <input
               name="email"
               type="email"
               required
-              placeholder="mohit@example.com"
-              className="w-full bg-gray-800 text-white border border-gray-700 rounded-lg px-4 py-3 focus:outline-none focus:border-blue-500"
+              placeholder="you@example.com"
+              style={{ background: 'var(--bg-input)', border: '1px solid var(--border-input)', color: 'var(--text-primary)' }}
+              className="w-full rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
             />
           </div>
 
           <div>
-            <label className="text-gray-300 text-sm font-medium block mb-1">
+            <label style={{ color: 'var(--text-secondary)' }} className="text-sm font-medium block mb-1">
               Password
             </label>
             <input
@@ -50,12 +65,16 @@ export default function LoginPage() {
               type="password"
               required
               placeholder="Your password"
-              className="w-full bg-gray-800 text-white border border-gray-700 rounded-lg px-4 py-3 focus:outline-none focus:border-blue-500"
+              style={{ background: 'var(--bg-input)', border: '1px solid var(--border-input)', color: 'var(--text-primary)' }}
+              className="w-full rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
             />
           </div>
 
           {error && (
-            <p className="text-red-400 text-sm bg-red-950 border border-red-800 rounded-lg px-4 py-2">
+            <p
+              style={{ background: 'color-mix(in srgb, var(--accent-red) 10%, transparent)', border: '1px solid color-mix(in srgb, var(--accent-red) 25%, transparent)', color: 'var(--accent-red)' }}
+              className="text-sm rounded-lg px-4 py-2"
+            >
               {error}
             </p>
           )}
@@ -63,15 +82,16 @@ export default function LoginPage() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-blue-900 text-white font-semibold py-3 rounded-lg transition-colors"
+            style={{ background: 'linear-gradient(135deg, var(--accent-indigo), var(--accent-indigo-dim))' }}
+            className="w-full text-white font-semibold py-3 rounded-lg transition-all disabled:opacity-60"
           >
             {loading ? 'Logging in...' : 'Login'}
           </button>
         </form>
 
-        <p className="text-center text-gray-400 mt-6 text-sm">
+        <p style={{ color: 'var(--text-secondary)' }} className="text-center mt-6 text-sm">
           Don&apos;t have an account?{' '}
-          <Link href="/signup" className="text-blue-400 hover:underline">
+          <Link href="/signup" style={{ color: 'var(--accent-indigo)' }} className="hover:underline">
             Sign up
           </Link>
         </p>

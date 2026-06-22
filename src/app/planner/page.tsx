@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { STATIONS } from '@/lib/metro/data';
 import Logo from '@/components/Logo';
 import StationSelect from '@/components/StationSelect';
+import ThemeToggle from '@/components/ThemeToggle';
 
 interface Station {
   id: number;
@@ -68,29 +69,31 @@ export default function PlannerPage() {
   }
 
   function getDotColor(station: Station, index: number, total: number) {
-    if (index === 0 || index === total - 1) return 'bg-blue-500 border-blue-400';
-    if (station.line === 'interchange') return 'bg-yellow-500 border-yellow-400';
-    if (station.line === 'purple') return 'bg-purple-500 border-purple-400';
-    return 'bg-cyan-500 border-cyan-400';
+    if (index === 0 || index === total - 1) return 'var(--text-primary)';
+    if (station.line === 'interchange') return 'var(--accent-amber)';
+    if (station.line === 'purple') return 'var(--accent-purple)';
+    return 'var(--accent-cyan)';
   }
 
   function getBarColor(line: string) {
-    if (line === 'purple') return 'bg-purple-700';
-    return 'bg-cyan-700';
+    if (line === 'purple') return 'color-mix(in srgb, var(--accent-purple) 40%, transparent)';
+    return 'color-mix(in srgb, var(--accent-cyan) 40%, transparent)';
   }
 
   return (
-    <main className="min-h-screen text-white"
-      style={{ background: 'radial-gradient(ellipse at 20% 0%, #0d1b3e 0%, #020817 60%)' }}>
+    <main className="min-h-screen" style={{ background: 'var(--bg-page)', color: 'var(--text-primary)' }}>
 
-      <header style={{ background: 'rgba(8,12,28,0.8)', backdropFilter: 'blur(16px)', borderBottom: '1px solid rgba(255,255,255,0.07)' }}
-        className="px-6 py-4">
+      <header
+        style={{ background: 'var(--bg-header)', backdropFilter: 'blur(16px)', borderBottom: '1px solid var(--border-subtle)' }}
+        className="px-6 py-4"
+      >
         <div className="max-w-4xl mx-auto flex items-center justify-between">
           <Logo />
-          <div className="flex gap-4 text-sm">
-            <a href="/map" className="text-gray-400 hover:text-white transition-colors">Map</a>
-            <a href="/booking" className="text-gray-400 hover:text-white transition-colors">Book</a>
-            <a href="/dashboard" className="text-gray-400 hover:text-white transition-colors">Dashboard</a>
+          <div className="flex items-center gap-4 text-sm">
+            <a href="/map" style={{ color: 'var(--text-secondary)' }} className="hover:opacity-80 transition-opacity">Map</a>
+            <a href="/booking" style={{ color: 'var(--text-secondary)' }} className="hover:opacity-80 transition-opacity">Book</a>
+            <a href="/dashboard" style={{ color: 'var(--text-secondary)' }} className="hover:opacity-80 transition-opacity">Dashboard</a>
+            <ThemeToggle />
           </div>
         </div>
       </header>
@@ -101,17 +104,17 @@ export default function PlannerPage() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1 }}
-          style={{ background: 'rgba(255,255,255,0.03)', backdropFilter: 'blur(20px)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: '20px' }}
+          style={{ background: 'var(--bg-card)', backdropFilter: 'blur(20px)', border: '1px solid var(--border-subtle)', borderRadius: '20px' }}
           className="p-6 mb-6"
         >
-          <h2 className="text-lg font-semibold text-white mb-4">
+          <h2 className="text-lg font-semibold mb-4" style={{ color: 'var(--text-primary)' }}>
             Plan Your Journey
           </h2>
 
           <div className="flex flex-col gap-4">
 
             <div>
-              <label className="text-gray-400 text-sm block mb-1">
+              <label className="text-sm block mb-1" style={{ color: 'var(--text-secondary)' }}>
                 From Station
               </label>
               <StationSelect
@@ -119,22 +122,22 @@ export default function PlannerPage() {
                 onChange={setFrom}
                 placeholder="Select source station"
                 stations={STATIONS}
-                accentColor="#8b5cf6"
+                accentColor="var(--accent-purple)"
               />
             </div>
 
             <div className="flex justify-center">
               <button
                 onClick={handleSwap}
-                style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.09)' }}
-                className="text-white px-6 py-2 rounded-full text-sm transition-colors"
+                style={{ background: 'var(--bg-input)', border: '1px solid var(--border-input)', color: 'var(--text-primary)' }}
+                className="px-6 py-2 rounded-full text-sm transition-colors"
               >
                 Swap
               </button>
             </div>
 
             <div>
-              <label className="text-gray-400 text-sm block mb-1">
+              <label className="text-sm block mb-1" style={{ color: 'var(--text-secondary)' }}>
                 To Station
               </label>
               <StationSelect
@@ -142,12 +145,15 @@ export default function PlannerPage() {
                 onChange={setTo}
                 placeholder="Select destination station"
                 stations={STATIONS}
-                accentColor="#06b6d4"
+                accentColor="var(--accent-cyan)"
               />
             </div>
 
             {error && (
-              <p className="text-red-400 text-sm bg-red-950 border border-red-800 rounded-lg px-4 py-2">
+              <p
+                style={{ background: 'color-mix(in srgb, var(--accent-red) 10%, transparent)', border: '1px solid color-mix(in srgb, var(--accent-red) 25%, transparent)', color: 'var(--accent-red)' }}
+                className="text-sm rounded-lg px-4 py-2"
+              >
                 {error}
               </p>
             )}
@@ -157,7 +163,7 @@ export default function PlannerPage() {
               whileTap={{ scale: 0.98 }}
               onClick={handleSearch}
               disabled={loading}
-              style={{ background: 'linear-gradient(135deg, #6366f1, #4f46e5)' }}
+              style={{ background: 'linear-gradient(135deg, var(--accent-indigo), var(--accent-indigo-dim))' }}
               className="w-full text-white font-semibold py-3 rounded-lg transition-all disabled:opacity-60"
             >
               {loading ? 'Calculating...' : 'Find Route'}
@@ -187,11 +193,11 @@ export default function PlannerPage() {
                     initial={{ opacity: 0, scale: 0.9 }}
                     animate={{ opacity: 1, scale: 1 }}
                     transition={{ delay: i * 0.1 }}
-                    style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}
+                    style={{ background: 'var(--bg-stat)', border: '1px solid var(--border-subtle)' }}
                     className="rounded-xl p-4 text-center"
                   >
-                    <div className="text-xl font-bold text-white">{stat.value}</div>
-                    <div className="text-gray-400 text-sm">{stat.label}</div>
+                    <div className="text-xl font-bold" style={{ color: 'var(--text-primary)' }}>{stat.value}</div>
+                    <div className="text-sm" style={{ color: 'var(--text-secondary)' }}>{stat.label}</div>
                   </motion.div>
                 ))}
               </div>
@@ -201,21 +207,21 @@ export default function PlannerPage() {
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   transition={{ delay: 0.3 }}
-                  style={{ background: 'rgba(251,191,36,0.08)', border: '1px solid rgba(251,191,36,0.15)' }}
+                  style={{ background: 'color-mix(in srgb, var(--accent-amber) 8%, transparent)', border: '1px solid color-mix(in srgb, var(--accent-amber) 15%, transparent)' }}
                   className="rounded-xl p-4 mb-6"
                 >
-                  <p className="text-yellow-400 font-medium">
+                  <p className="font-medium" style={{ color: 'var(--accent-amber)' }}>
                     Interchange at: {result.interchanges.join(', ')}
                   </p>
-                  <p className="text-yellow-600 text-sm mt-1">
+                  <p className="text-sm mt-1" style={{ color: 'var(--accent-amber)', opacity: 0.8 }}>
                     Change trains at this station
                   </p>
                 </motion.div>
               )}
 
-              <div style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)' }}
+              <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border-subtle)' }}
                 className="rounded-2xl p-6">
-                <h3 className="text-lg font-semibold text-white mb-4">Route Path</h3>
+                <h3 className="text-lg font-semibold mb-4" style={{ color: 'var(--text-primary)' }}>Route Path</h3>
                 <div>
                   {result.path.map((station, index) => (
                     <motion.div
@@ -227,41 +233,56 @@ export default function PlannerPage() {
                     >
                       <div className="flex flex-col items-center">
                         <div
-                          className={
-                            'w-4 h-4 rounded-full border-2 z-10 ' +
-                            getDotColor(station, index, result.path.length)
-                          }
+                          style={{
+                            width: index === 0 || index === result.path.length - 1 ? '18px' : '16px',
+                            height: index === 0 || index === result.path.length - 1 ? '18px' : '16px',
+                            borderRadius: '50%',
+                            border: '2px solid ' + getDotColor(station, index, result.path.length),
+                            background: getDotColor(station, index, result.path.length),
+                            zIndex: 10,
+                          }}
                         />
                         {index < result.path.length - 1 && (
                           <div
-                            className={'w-0.5 h-8 ' + getBarColor(station.line)}
+                            style={{ width: '2px', height: '32px', background: getBarColor(station.line) }}
                           />
                         )}
                       </div>
                       <div className="py-1">
                         <span
-                          className={
-                            index === 0 || index === result.path.length - 1
-                              ? 'text-blue-400 text-lg font-medium'
+                          style={{
+                            color: index === 0 || index === result.path.length - 1
+                              ? 'var(--text-primary)'
                               : station.line === 'interchange'
-                              ? 'text-yellow-400 font-medium'
-                              : 'text-white font-medium'
-                          }
+                              ? 'var(--accent-amber)'
+                              : 'var(--text-primary)',
+                            fontSize: index === 0 || index === result.path.length - 1 ? '18px' : '14px',
+                            fontWeight: 500,
+                          }}
                         >
                           {station.name}
                         </span>
                         {station.line === 'interchange' && (
-                          <span className="ml-2 text-xs bg-yellow-900 text-yellow-400 px-2 py-0.5 rounded-full">
+                          <span
+                            style={{ background: 'color-mix(in srgb, var(--accent-amber) 15%, transparent)', color: 'var(--accent-amber)' }}
+                            className="ml-2 text-xs px-2 py-0.5 rounded-full"
+                          >
                             Interchange
                           </span>
                         )}
                         {index === 0 && (
-                          <span className="ml-2 text-xs bg-green-900 text-green-400 px-2 py-0.5 rounded-full">
+                          <span
+                            style={{ background: 'color-mix(in srgb, var(--accent-green) 15%, transparent)', color: 'var(--accent-green)' }}
+                            className="ml-2 text-xs px-2 py-0.5 rounded-full"
+                          >
                             Start
                           </span>
                         )}
                         {index === result.path.length - 1 && (
-                          <span className="ml-2 text-xs bg-blue-900 text-blue-400 px-2 py-0.5 rounded-full">
+                          <span
+                            style={{ background: 'color-mix(in srgb, var(--accent-indigo) 15%, transparent)', color: 'var(--accent-indigo)' }}
+                            className="ml-2 text-xs px-2 py-0.5 rounded-full"
+                          >
                             End
                           </span>
                         )}
@@ -279,7 +300,7 @@ export default function PlannerPage() {
               >
                 <a
                   href={'/booking?fromName=' + STATIONS.find(s => String(s.id) === from)?.name + '&toName=' + STATIONS.find(s => String(s.id) === to)?.name}
-                  style={{ background: 'linear-gradient(135deg, #059669, #047857)' }}
+                  style={{ background: 'linear-gradient(135deg, var(--accent-green-dim), var(--accent-green))' }}
                   className="block w-full text-white font-semibold py-3 rounded-lg text-center transition-colors"
                 >
                   Book Ticket - Rs. {result.totalFare}

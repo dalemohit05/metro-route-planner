@@ -19,7 +19,7 @@ export default function Logo({ size = 'md', showTagline = false, taglineLang = '
           width: s.iconBox,
           height: s.iconBox,
           borderRadius: '8px',
-          background: 'linear-gradient(135deg, #6366f1, #8b5cf6)',
+          background: 'linear-gradient(135deg, var(--accent-indigo), var(--accent-purple))',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
@@ -33,7 +33,7 @@ export default function Logo({ size = 'md', showTagline = false, taglineLang = '
         <div
           className="font-devanagari"
           style={{
-            color: 'white',
+            color: 'var(--text-primary)',
             fontWeight: 700,
             fontSize: s.name,
             letterSpacing: '-0.01em',
@@ -43,7 +43,7 @@ export default function Logo({ size = 'md', showTagline = false, taglineLang = '
           मेट्रोमित्र
         </div>
         {showTagline && (
-          <div style={{ color: '#6366f1', fontSize: s.tagline, marginTop: '2px' }}>
+          <div style={{ color: 'var(--accent-indigo)', fontSize: s.tagline, marginTop: '2px' }}>
             {taglineLang === 'hi'
               ? 'आपला स्मार्ट पुणे मेट्रो साथी'
               : 'Your Smart Pune Metro Companion'}
