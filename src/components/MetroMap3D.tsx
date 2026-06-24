@@ -46,6 +46,8 @@ const POSITIONS: Record<string, { x: number; y: number }> = {
   'Ramwadi':              { x: 665, y: 308 },
 };
 
+// Approximate distance to next station on each line, for the info card's
+// "facilities/connections" feel — kept simple, not wired to real data.
 const ALL_STATIONS = Object.keys(POSITIONS);
 
 interface StationInfo { name: string; line: string; }
@@ -62,10 +64,6 @@ interface RouteResult {
 function buildPoints(stations: string[]) {
   return stations.filter(s => POSITIONS[s]).map(s => POSITIONS[s].x + ',' + POSITIONS[s].y).join(' ');
 }
-
-// Resolve a CSS variable to its actual computed color (needed for SVG fill/stroke
-// in some edge cases, but modern browsers support var() directly in SVG attrs
-// when set via style, so we use inline style on SVG elements instead of attributes).
 
 function Train({ line, colorVar, fillVar, speed = 1200 }: {
   line: string[];
@@ -114,14 +112,22 @@ function Train({ line, colorVar, fillVar, speed = 1200 }: {
   );
 }
 
+function getStationLine(name: string): 'purple' | 'aqua' | 'interchange' {
+  if (name === 'Shivajinagar') return 'interchange';
+  if (PURPLE_LINE.includes(name)) return 'purple';
+  return 'aqua';
+}
+
 export default function MetroMap3D() {
   const [from, setFrom] = useState('');
   const [to, setTo] = useState('');
   const [result, setResult] = useState<RouteResult | null>(null);
   const [highlightedPath, setHighlightedPath] = useState<string[]>([]);
   const [hoveredStation, setHoveredStation] = useState('');
+  const [clickedStation, setClickedStation] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [routeKey, setRouteKey] = useState(0);
+  const [zoom, setZoom] = useState(1);
 
   async function handleFindRoute() {
     if (!from || !to || from === to) return;
@@ -139,10 +145,11 @@ export default function MetroMap3D() {
   }
 
   function handleClear() {
-    setFrom(''); setTo(''); setResult(null); setHighlightedPath([]);
+    setFrom(''); setTo(''); setResult(null); setHighlightedPath([]); setClickedStation(null);
   }
 
   function handleStationClick(name: string) {
+    setClickedStation(name);
     if (!from) { setFrom(name); return; }
     if (!to && name !== from) { setTo(name); return; }
     setFrom(name); setTo(''); setResult(null); setHighlightedPath([]);
@@ -155,10 +162,23 @@ export default function MetroMap3D() {
     return '/booking?' + params.toString();
   }
 
+  function zoomIn() {
+    setZoom((z) => Math.min(z + 0.25, 2));
+  }
+  function zoomOut() {
+    setZoom((z) => Math.max(z - 0.25, 0.6));
+  }
+  function zoomReset() {
+    setZoom(1);
+  }
+
   const highlightPoints = highlightedPath
     .filter(s => POSITIONS[s])
     .map(s => POSITIONS[s].x + ',' + POSITIONS[s].y)
     .join(' ');
+
+  const infoStation = clickedStation;
+  const infoStationLine = infoStation ? getStationLine(infoStation) : null;
 
   return (
     <div style={{ background: 'var(--bg-page)', minHeight: '100vh', fontFamily: 'system-ui, -apple-system, sans-serif', color: 'var(--text-primary)' }}>
@@ -189,7 +209,7 @@ export default function MetroMap3D() {
 
             <div style={{ flex: 1, minWidth: '180px' }}>
               <label style={{ color: 'var(--text-muted)', fontSize: '10px', fontWeight: '600', letterSpacing: '0.08em', textTransform: 'uppercase', display: 'block', marginBottom: '8px' }}>Origin</label>
-              <select value={from} onChange={e => setFrom(e.target.value)}
+              <select value={from} onChange={e => { setFrom(e.target.value); setClickedStation(e.target.value || null); }}
                 style={{ width: '100%', background: 'var(--bg-input)', border: '1px solid var(--border-input)', borderRadius: '10px', color: from ? 'var(--text-primary)' : 'var(--text-placeholder)', fontSize: '13px', padding: '10px 14px', outline: 'none', cursor: 'pointer' }}>
                 <option value="">Select origin station</option>
                 <optgroup label="Purple Line">{PURPLE_LINE.filter(s => s !== 'Shivajinagar').map(s => <option key={s} value={s}>{s}</option>)}</optgroup>
@@ -205,7 +225,7 @@ export default function MetroMap3D() {
 
             <div style={{ flex: 1, minWidth: '180px' }}>
               <label style={{ color: 'var(--text-muted)', fontSize: '10px', fontWeight: '600', letterSpacing: '0.08em', textTransform: 'uppercase', display: 'block', marginBottom: '8px' }}>Destination</label>
-              <select value={to} onChange={e => setTo(e.target.value)}
+              <select value={to} onChange={e => { setTo(e.target.value); setClickedStation(e.target.value || null); }}
                 style={{ width: '100%', background: 'var(--bg-input)', border: '1px solid var(--border-input)', borderRadius: '10px', color: to ? 'var(--text-primary)' : 'var(--text-placeholder)', fontSize: '13px', padding: '10px 14px', outline: 'none', cursor: 'pointer' }}>
                 <option value="">Select destination station</option>
                 <optgroup label="Purple Line">{PURPLE_LINE.filter(s => s !== 'Shivajinagar').map(s => <option key={s} value={s}>{s}</option>)}</optgroup>
@@ -233,91 +253,118 @@ export default function MetroMap3D() {
 
           {/* Map Panel */}
           <div style={{ flex: '1 1 0', minWidth: 0, background: 'var(--bg-card)', border: '1px solid var(--border-subtle)', borderRadius: '20px', overflow: 'hidden', position: 'relative' }}>
-            <div style={{ overflowX: 'auto', overflowY: 'auto', height: '100%', minHeight: '540px' }}>
-              <svg width="740" height="560" viewBox="0 0 740 560" style={{ minWidth: '640px', display: 'block' }}>
-                <rect width="740" height="560" style={{ fill: 'var(--bg-solid)' }} />
-                {Array.from({ length: 8 }).map((_, i) => (
-                  <line key={'h' + i} x1="0" y1={i * 80} x2="740" y2={i * 80} style={{ stroke: 'var(--border-subtle)', strokeWidth: 1 }} />
-                ))}
-                {Array.from({ length: 10 }).map((_, i) => (
-                  <line key={'v' + i} x1={i * 80} y1="0" x2={i * 80} y2="560" style={{ stroke: 'var(--border-subtle)', strokeWidth: 1 }} />
-                ))}
 
-                {/* Purple line */}
-                <polyline points={buildPoints(PURPLE_LINE)} fill="none" style={{ stroke: 'var(--accent-purple-dim)', strokeWidth: 16, opacity: 0.12 }} strokeLinecap="round" strokeLinejoin="round" />
-                <polyline points={buildPoints(PURPLE_LINE)} fill="none" style={{ stroke: 'var(--accent-purple)', strokeWidth: 7, opacity: 0.95 }} strokeLinecap="round" strokeLinejoin="round" />
+            {/* Zoom controls */}
+            <div style={{ position: 'absolute', top: '12px', right: '12px', zIndex: 20, display: 'flex', flexDirection: 'column', gap: '4px' }}>
+              {[
+                { label: '+', action: zoomIn, title: 'Zoom in' },
+                { label: '−', action: zoomOut, title: 'Zoom out' },
+                { label: '⟲', action: zoomReset, title: 'Reset zoom' },
+              ].map((btn) => (
+                <button
+                  key={btn.label}
+                  onClick={btn.action}
+                  title={btn.title}
+                  style={{
+                    width: '32px', height: '32px', borderRadius: '8px',
+                    background: 'var(--bg-dropdown)', border: '1px solid var(--border-strong)',
+                    color: 'var(--text-secondary)', fontSize: '15px', cursor: 'pointer',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  }}
+                >
+                  {btn.label}
+                </button>
+              ))}
+            </div>
 
-                {/* Aqua line */}
-                <polyline points={buildPoints(AQUA_LINE)} fill="none" style={{ stroke: 'var(--accent-cyan-dim)', strokeWidth: 16, opacity: 0.12 }} strokeLinecap="round" strokeLinejoin="round" />
-                <polyline points={buildPoints(AQUA_LINE)} fill="none" style={{ stroke: 'var(--accent-cyan)', strokeWidth: 7, opacity: 0.95 }} strokeLinecap="round" strokeLinejoin="round" />
+            <div style={{ overflowX: 'auto', overflowY: 'auto', height: '100%', minHeight: '540px', cursor: 'grab' }}>
+              <div style={{ transform: 'scale(' + zoom + ')', transformOrigin: 'top left', transition: 'transform 0.2s ease', width: '740px' }}>
+                <svg width="740" height="560" viewBox="0 0 740 560" style={{ display: 'block' }}>
+                  <rect width="740" height="560" style={{ fill: 'var(--bg-solid)' }} />
+                  {Array.from({ length: 8 }).map((_, i) => (
+                    <line key={'h' + i} x1="0" y1={i * 80} x2="740" y2={i * 80} style={{ stroke: 'var(--border-subtle)', strokeWidth: 1 }} />
+                  ))}
+                  {Array.from({ length: 10 }).map((_, i) => (
+                    <line key={'v' + i} x1={i * 80} y1="0" x2={i * 80} y2="560" style={{ stroke: 'var(--border-subtle)', strokeWidth: 1 }} />
+                  ))}
 
-                {/* Highlighted route */}
-                {highlightedPath.length > 1 && (
-                  <motion.polyline
-                    key={routeKey}
-                    points={highlightPoints}
-                    fill="none"
-                    strokeLinecap="round" strokeLinejoin="round"
-                    strokeDasharray="1200" strokeDashoffset="1200"
-                    animate={{ strokeDashoffset: 0 }}
-                    transition={{ duration: 1.3, ease: 'easeInOut' }}
-                    style={{ stroke: 'var(--text-primary)', strokeWidth: 9, filter: 'drop-shadow(0 0 10px color-mix(in srgb, var(--text-primary) 70%, transparent))' }}
-                  />
-                )}
+                  {/* Purple line */}
+                  <polyline points={buildPoints(PURPLE_LINE)} fill="none" style={{ stroke: 'var(--accent-purple-dim)', strokeWidth: 16, opacity: 0.12 }} strokeLinecap="round" strokeLinejoin="round" />
+                  <polyline points={buildPoints(PURPLE_LINE)} fill="none" style={{ stroke: 'var(--accent-purple)', strokeWidth: 7, opacity: 0.95 }} strokeLinecap="round" strokeLinejoin="round" />
 
-                {/* Trains */}
-                <Train line={PURPLE_LINE} colorVar="var(--accent-purple-dim)" fillVar="var(--accent-purple)" speed={1100} />
-                <Train line={AQUA_LINE} colorVar="var(--accent-cyan-dim)" fillVar="var(--accent-cyan)" speed={1300} />
+                  {/* Aqua line */}
+                  <polyline points={buildPoints(AQUA_LINE)} fill="none" style={{ stroke: 'var(--accent-cyan-dim)', strokeWidth: 16, opacity: 0.12 }} strokeLinecap="round" strokeLinejoin="round" />
+                  <polyline points={buildPoints(AQUA_LINE)} fill="none" style={{ stroke: 'var(--accent-cyan)', strokeWidth: 7, opacity: 0.95 }} strokeLinecap="round" strokeLinejoin="round" />
 
-                {/* Stations */}
-                {ALL_STATIONS.map((name) => {
-                  const pos = POSITIONS[name];
-                  if (!pos) return null;
-                  const isInterchange = name === 'Shivajinagar';
-                  const isPurple = PURPLE_LINE.includes(name);
-                  const isHL = highlightedPath.includes(name);
-                  const isFrom = name === from;
-                  const isTo = name === to;
-                  const isHov = hoveredStation === name;
-                  const col = isInterchange ? 'var(--accent-amber)' : isPurple ? 'var(--accent-purple)' : 'var(--accent-cyan)';
-                  const r = isInterchange ? 11 : (isFrom || isTo) ? 10 : isHov ? 9 : 7;
+                  {/* Highlighted route */}
+                  {highlightedPath.length > 1 && (
+                    <motion.polyline
+                      key={routeKey}
+                      points={highlightPoints}
+                      fill="none"
+                      strokeLinecap="round" strokeLinejoin="round"
+                      strokeDasharray="1200" strokeDashoffset="1200"
+                      animate={{ strokeDashoffset: 0 }}
+                      transition={{ duration: 1.3, ease: 'easeInOut' }}
+                      style={{ stroke: 'var(--text-primary)', strokeWidth: 9, filter: 'drop-shadow(0 0 10px color-mix(in srgb, var(--text-primary) 70%, transparent))' }}
+                    />
+                  )}
 
-                  return (
-                    <g key={name}>
-                      {(isHL || isFrom || isTo) && <circle cx={pos.x} cy={pos.y} r={r + 9} style={{ fill: col, opacity: 0.12 }} />}
-                      {isInterchange && <circle cx={pos.x} cy={pos.y} r={r + 5} fill="none" style={{ stroke: 'var(--accent-amber)', strokeWidth: 2, opacity: 0.4 }} strokeDasharray="3 2" />}
-                      {isHov && <circle cx={pos.x} cy={pos.y} r={r + 5} style={{ fill: col, opacity: 0.15 }} />}
-                      <circle cx={pos.x} cy={pos.y} r={r}
-                        style={{
-                          fill: isHL || isFrom || isTo ? col : 'var(--bg-solid)',
-                          stroke: col,
-                          strokeWidth: isInterchange ? 2.5 : 2,
-                          cursor: 'pointer',
-                          transition: 'all 0.2s ease',
-                        }}
-                        onClick={() => handleStationClick(name)}
-                        onMouseEnter={() => setHoveredStation(name)}
-                        onMouseLeave={() => setHoveredStation('')}
-                      />
-                      {!isHL && !isFrom && !isTo && (
-                        <circle cx={pos.x} cy={pos.y} r={r - 3.5} style={{ fill: col, opacity: 0.65, pointerEvents: 'none' }} />
-                      )}
-                      {isFrom && <text x={pos.x} y={pos.y + 3.5} textAnchor="middle" style={{ fill: 'white', fontSize: '8px', fontWeight: 700, pointerEvents: 'none' }}>S</text>}
-                      {isTo && <text x={pos.x} y={pos.y + 3.5} textAnchor="middle" style={{ fill: 'white', fontSize: '8px', fontWeight: 700, pointerEvents: 'none' }}>E</text>}
-                      {isHov && (
-                        <g style={{ pointerEvents: 'none' }}>
-                          <rect x={pos.x - 58} y={pos.y - 42} width="116" height="32" rx="7" style={{ fill: 'var(--bg-dropdown)', stroke: 'var(--border-strong)', strokeWidth: 1 }} />
-                          <text x={pos.x} y={pos.y - 25} textAnchor="middle" style={{ fill: 'var(--text-primary)', fontSize: '9.5px', fontWeight: 600 }}>{name}</text>
-                          <text x={pos.x} y={pos.y - 14} textAnchor="middle" style={{ fill: col, fontSize: '8px' }}>{isInterchange ? 'Interchange Station' : isPurple ? 'Purple Line' : 'Aqua Line'}</text>
-                        </g>
-                      )}
-                      {isInterchange && !isHov && (
-                        <text x={pos.x + 15} y={pos.y + 4} style={{ fill: 'var(--accent-amber)', fontSize: '8.5px', fontWeight: 600, pointerEvents: 'none' }}>Shivajinagar</text>
-                      )}
-                    </g>
-                  );
-                })}
-              </svg>
+                  {/* Trains */}
+                  <Train line={PURPLE_LINE} colorVar="var(--accent-purple-dim)" fillVar="var(--accent-purple)" speed={1100} />
+                  <Train line={AQUA_LINE} colorVar="var(--accent-cyan-dim)" fillVar="var(--accent-cyan)" speed={1300} />
+
+                  {/* Stations */}
+                  {ALL_STATIONS.map((name) => {
+                    const pos = POSITIONS[name];
+                    if (!pos) return null;
+                    const isInterchange = name === 'Shivajinagar';
+                    const isPurple = PURPLE_LINE.includes(name);
+                    const isHL = highlightedPath.includes(name);
+                    const isFrom = name === from;
+                    const isTo = name === to;
+                    const isHov = hoveredStation === name;
+                    const isClicked = clickedStation === name;
+                    const col = isInterchange ? 'var(--accent-amber)' : isPurple ? 'var(--accent-purple)' : 'var(--accent-cyan)';
+                    const r = isInterchange ? 11 : (isFrom || isTo) ? 10 : isHov || isClicked ? 9 : 7;
+
+                    return (
+                      <g key={name}>
+                        {(isHL || isFrom || isTo || isClicked) && <circle cx={pos.x} cy={pos.y} r={r + 9} style={{ fill: col, opacity: 0.12 }} />}
+                        {isInterchange && <circle cx={pos.x} cy={pos.y} r={r + 5} fill="none" style={{ stroke: 'var(--accent-amber)', strokeWidth: 2, opacity: 0.4 }} strokeDasharray="3 2" />}
+                        {isHov && <circle cx={pos.x} cy={pos.y} r={r + 5} style={{ fill: col, opacity: 0.15 }} />}
+                        <circle cx={pos.x} cy={pos.y} r={r}
+                          style={{
+                            fill: isHL || isFrom || isTo || isClicked ? col : 'var(--bg-solid)',
+                            stroke: col,
+                            strokeWidth: isInterchange ? 2.5 : 2,
+                            cursor: 'pointer',
+                            transition: 'all 0.2s ease',
+                          }}
+                          onClick={() => handleStationClick(name)}
+                          onMouseEnter={() => setHoveredStation(name)}
+                          onMouseLeave={() => setHoveredStation('')}
+                        />
+                        {!isHL && !isFrom && !isTo && !isClicked && (
+                          <circle cx={pos.x} cy={pos.y} r={r - 3.5} style={{ fill: col, opacity: 0.65, pointerEvents: 'none' }} />
+                        )}
+                        {isFrom && <text x={pos.x} y={pos.y + 3.5} textAnchor="middle" style={{ fill: 'white', fontSize: '8px', fontWeight: 700, pointerEvents: 'none' }}>S</text>}
+                        {isTo && <text x={pos.x} y={pos.y + 3.5} textAnchor="middle" style={{ fill: 'white', fontSize: '8px', fontWeight: 700, pointerEvents: 'none' }}>E</text>}
+                        {isHov && (
+                          <g style={{ pointerEvents: 'none' }}>
+                            <rect x={pos.x - 58} y={pos.y - 42} width="116" height="32" rx="7" style={{ fill: 'var(--bg-dropdown)', stroke: 'var(--border-strong)', strokeWidth: 1 }} />
+                            <text x={pos.x} y={pos.y - 25} textAnchor="middle" style={{ fill: 'var(--text-primary)', fontSize: '9.5px', fontWeight: 600 }}>{name}</text>
+                            <text x={pos.x} y={pos.y - 14} textAnchor="middle" style={{ fill: col, fontSize: '8px' }}>{isInterchange ? 'Interchange Station' : isPurple ? 'Purple Line' : 'Aqua Line'}</text>
+                          </g>
+                        )}
+                        {isInterchange && !isHov && (
+                          <text x={pos.x + 15} y={pos.y + 4} style={{ fill: 'var(--accent-amber)', fontSize: '8.5px', fontWeight: 600, pointerEvents: 'none' }}>Shivajinagar</text>
+                        )}
+                      </g>
+                    );
+                  })}
+                </svg>
+              </div>
             </div>
 
             {/* Floating Legend */}
@@ -336,7 +383,7 @@ export default function MetroMap3D() {
             </div>
           </div>
 
-          {/* Route Details Panel */}
+          {/* Side Panel — Station Info or Route Details */}
           <div style={{ width: '288px', flexShrink: 0, display: 'flex', flexDirection: 'column', gap: '12px' }}>
             <AnimatePresence mode="wait">
               {result ? (
@@ -405,17 +452,52 @@ export default function MetroMap3D() {
                     Book Ticket — Rs. {result.totalFare}
                   </motion.a>
                 </motion.div>
+              ) : infoStation ? (
+                <motion.div key="info" initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -16 }} transition={{ duration: 0.3 }}>
+                  <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border-subtle)', borderRadius: '20px', padding: '24px' }}>
+                    <div
+                      style={{
+                        width: '48px', height: '48px', borderRadius: '12px',
+                        background: infoStationLine === 'interchange' ? 'color-mix(in srgb, var(--accent-amber) 15%, transparent)' : infoStationLine === 'purple' ? 'color-mix(in srgb, var(--accent-purple) 15%, transparent)' : 'color-mix(in srgb, var(--accent-cyan) 15%, transparent)',
+                        display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '22px', marginBottom: '16px',
+                      }}
+                    >
+                      🚉
+                    </div>
+                    <h3 style={{ color: 'var(--text-primary)' }} className="text-lg font-semibold mb-1">{infoStation}</h3>
+                    <span
+                      style={{
+                        color: infoStationLine === 'interchange' ? 'var(--accent-amber)' : infoStationLine === 'purple' ? 'var(--accent-purple)' : 'var(--accent-cyan)',
+                        fontSize: '12px', fontWeight: 500,
+                      }}
+                    >
+                      {infoStationLine === 'interchange' ? 'Interchange Station' : infoStationLine === 'purple' ? 'Purple Line' : 'Aqua Line'}
+                    </span>
+
+                    <div style={{ borderTop: '1px solid var(--border-subtle)', margin: '16px 0' }} />
+
+                    <div className="space-y-2">
+                      <div className="flex justify-between text-sm">
+                        <span style={{ color: 'var(--text-muted)' }}>Facilities</span>
+                        <span style={{ color: 'var(--text-secondary)' }}>Lift, Escalator, Ticketing</span>
+                      </div>
+                      <div className="flex justify-between text-sm">
+                        <span style={{ color: 'var(--text-muted)' }}>Status</span>
+                        <span style={{ color: 'var(--accent-green)' }}>Operational</span>
+                      </div>
+                    </div>
+
+                    <p style={{ color: 'var(--text-faint)' }} className="text-xs mt-4">
+                      Select an origin and destination above, then tap Show Route.
+                    </p>
+                  </div>
+                </motion.div>
               ) : (
                 <motion.div key="empty" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
                   style={{ background: 'var(--bg-card)', border: '1px solid var(--border-subtle)', borderRadius: '20px', padding: '40px 24px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', textAlign: 'center', minHeight: '300px' }}>
                   <div style={{ width: '48px', height: '48px', borderRadius: '12px', background: 'color-mix(in srgb, var(--accent-indigo) 10%, transparent)', border: '1px solid color-mix(in srgb, var(--accent-indigo) 20%, transparent)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '22px', marginBottom: '16px' }}>🗺️</div>
-                  <div style={{ color: 'var(--text-primary)', fontWeight: '600', fontSize: '14px', marginBottom: '6px' }}>Plan your journey</div>
-                  <div style={{ color: 'var(--text-muted)', fontSize: '12px', lineHeight: '1.5' }}>Select origin and destination, then tap Show Route</div>
-                  {from && !to && (
-                    <div style={{ marginTop: '16px', background: 'color-mix(in srgb, var(--accent-indigo) 8%, transparent)', border: '1px solid color-mix(in srgb, var(--accent-indigo) 15%, transparent)', borderRadius: '8px', padding: '8px 12px' }}>
-                      <span style={{ color: 'var(--accent-indigo)', fontSize: '11px' }}>Origin: <strong style={{ color: 'var(--text-primary)' }}>{from}</strong> — now pick destination</span>
-                    </div>
-                  )}
+                  <div style={{ color: 'var(--text-primary)', fontWeight: '600', fontSize: '14px', marginBottom: '6px' }}>Explore the network</div>
+                  <div style={{ color: 'var(--text-muted)', fontSize: '12px', lineHeight: '1.5' }}>Click any station to see details, or select origin and destination to find a route</div>
                 </motion.div>
               )}
             </AnimatePresence>
