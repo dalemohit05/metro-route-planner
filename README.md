@@ -1,36 +1,105 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# 🚇 मेट्रोमित्र (MetroMitra)
 
-## Getting Started
+**Your Smart Pune Metro Companion** — a full-stack metro route planning and ticket booking platform built with Next.js, TypeScript, and Supabase.
 
-First, run the development server:
+🔗 **Live Demo:** [metro-route-planner-three.vercel.app](https://metro-route-planner-three.vercel.app)
+
+---
+
+## ✨ Features
+
+- **Smart Route Planning** — Dijkstra's algorithm finds the shortest path between any two stations, with automatic interchange detection
+- **Interactive Metro Map** — SVG-based map with both metro lines, animated trains, zoom controls, and clickable station info
+- **Ticket Booking** — Multi-step booking flow with passenger details, journey preview, and instant QR code ticket generation
+- **Authentication** — Secure signup/login with Supabase Auth and protected routes
+- **User Dashboard** — Real-time stats, recent journeys, and network overview pulled live from the database
+- **Profile Management** — Editable profile, travel history, saved routes, and theme preferences
+- **Admin Panel** — User management, booking analytics, a revenue chart, and station management
+- **Light / Dark / Auto Theme** — Time-based automatic theme switching with manual override, persisted across sessions
+
+---
+
+## 🛠️ Tech Stack
+
+**Frontend**
+- Next.js 16 (App Router)
+- TypeScript
+- Tailwind CSS v4
+- Framer Motion (animations)
+- Recharts (admin analytics)
+
+**Backend**
+- Next.js Server Actions & API Routes
+- Supabase (PostgreSQL + Auth)
+- Row Level Security (RLS) policies
+
+**Core Algorithm**
+- Custom TypeScript implementation of Dijkstra's shortest-path algorithm with a binary min-heap, adapted from an earlier Java DSA project
+
+---
+
+## 📐 Architecture Highlights
+
+- Server Components for data-fetching pages (dashboard, admin, profile)
+- Client Components for interactive UI (route planner, map, booking flow, theme toggle)
+- CSS custom properties for a fully theme-aware design system (no hardcoded colors)
+- Server Actions for all mutations (auth, bookings, profile updates) — no separate REST layer needed
+
+---
+
+## 🚀 Getting Started
+
+```bash
+git clone https://github.com/dalemohit05/metro-route-planner.git
+cd metro-route-planner
+npm install
+```
+
+Create a `.env.local` file with your Supabase credentials:
+
+```env
+NEXT_PUBLIC_SUPABASE_URL=your-supabase-url
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your-supabase-anon-key
+```
+
+Run the development server:
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:3000](http://localhost:3000).
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+---
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## 📂 Project Structure
 
-## Learn More
+```
+src/
+├── app/              # Pages (App Router)
+│   ├── (auth)/       # Login, Signup
+│   ├── dashboard/    # User dashboard
+│   ├── planner/      # Route planner
+│   ├── map/          # Interactive metro map
+│   ├── booking/      # Ticket booking flow
+│   ├── profile/      # User profile
+│   ├── admin/        # Admin panel
+│   └── api/route/    # Route calculation API
+├── components/       # Reusable UI components
+└── lib/
+    ├── actions/      # Server Actions (auth, booking)
+    ├── metro/        # Station data & Dijkstra algorithm
+    └── supabase/     # Supabase client setup
+```
 
-To learn more about Next.js, take a look at the following resources:
+---
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## 📝 Note
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+This project began as a Java console-based DSA mini-project implementing graph algorithms (Dijkstra's shortest path, adjacency lists, min-heaps) for the Pune Metro network. It was later rebuilt from the ground up as a production-style full-stack web application, while preserving the original algorithmic core.
 
-## Deploy on Vercel
+---
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## 📄 License
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+This project is open source and available for learning purposes.
