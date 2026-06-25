@@ -32,7 +32,7 @@ export default function RevenueChart({ data }: RevenueChartProps) {
               color: 'var(--text-primary)',
             }}
             labelStyle={{ color: 'var(--text-secondary)' }}
-            formatter={(value: number) => ['Rs. ' + value, 'Revenue']}
+            formatter={(value) => ['Rs. ' + String(value), 'Revenue']}
           />
           <Bar dataKey="revenue" fill="var(--accent-indigo)" radius={[6, 6, 0, 0]} maxBarSize={36} />
         </BarChart>
