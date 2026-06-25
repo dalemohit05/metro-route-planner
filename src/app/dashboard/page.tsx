@@ -3,14 +3,7 @@ import { signOut } from '@/lib/actions/auth';
 import { redirect } from 'next/navigation';
 import Logo from '@/components/Logo';
 import ThemeToggle from '@/components/ThemeToggle';
-
-function getGreeting() {
-  const hour = new Date().getHours();
-  if (hour >= 5 && hour < 12) return { text: 'Good Morning', emoji: '👋' };
-  if (hour >= 12 && hour < 17) return { text: 'Good Afternoon', emoji: '☀️' };
-  if (hour >= 17 && hour < 20) return { text: 'Good Evening', emoji: '🌆' };
-  return { text: 'Good Evening', emoji: '🌙' };
-}
+import Greeting from '@/components/Greeting';
 
 export default async function DashboardPage() {
   const supabase = await createServerSupabaseClient();
@@ -46,8 +39,6 @@ export default async function DashboardPage() {
     ? Math.round(allBookingsForAvg.reduce((sum, b) => sum + (b.travel_time || 0), 0) / allBookingsForAvg.length)
     : 0;
 
-  const greeting = getGreeting();
-
   const stats = [
     { icon: '🚉', label: 'Stations Available', value: stationsCount || 0, accent: 'var(--accent-cyan)' },
     { icon: '🗺️', label: 'Routes Planned', value: routesPlannedCount || 0, accent: 'var(--accent-purple)' },
@@ -79,13 +70,11 @@ export default async function DashboardPage() {
 
       <div className="max-w-5xl mx-auto px-6 py-8">
 
-        {/* Welcome */}
+        {/* Welcome — greeting is computed client-side so it reflects the visitor's local time */}
         <div
           style={{ background: 'var(--bg-card)', border: '1px solid var(--border-subtle)', borderRadius: '16px', padding: '20px', marginBottom: '20px' }}
         >
-          <h2 className="text-xl font-semibold mb-1" style={{ color: 'var(--text-primary)' }}>
-            {greeting.text}, {profile?.full_name || 'there'}! {greeting.emoji}
-          </h2>
+          <Greeting name={profile?.full_name || 'there'} />
           <p className="text-sm font-devanagari" style={{ color: 'var(--text-secondary)' }}>
             Welcome back to मेट्रोमित्र
           </p>
