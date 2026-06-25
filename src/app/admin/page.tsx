@@ -2,6 +2,7 @@ import { createServerSupabaseClient } from '@/lib/supabase/server';
 import { signOut } from '@/lib/actions/auth';
 import Logo from '@/components/Logo';
 import ThemeToggle from '@/components/ThemeToggle';
+import RevenueChart from '@/components/RevenueChart';
 
 export default async function AdminPage() {
   const supabase = await createServerSupabaseClient();
@@ -12,6 +13,8 @@ export default async function AdminPage() {
     { data: revenueData },
     { data: recentBookings },
     { data: recentUsers },
+    { data: stations },
+    { data: last7DaysBookings },
   ] = await Promise.all([
     supabase.from('profiles').select('*', { count: 'exact', head: true }),
     supabase.from('bookings').select('*', { count: 'exact', head: true }),
@@ -21,10 +24,29 @@ export default async function AdminPage() {
     `).order('created_at', { ascending: false }).limit(10),
     supabase.from('profiles').select('id, full_name, role, created_at')
       .order('created_at', { ascending: false }).limit(10),
+    supabase.from('stations').select('id, name, line_id, is_interchange').order('sequence_number'),
+    supabase.from('bookings').select('fare, created_at')
+      .gte('created_at', new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString()),
   ]);
 
   const totalRevenue = revenueData?.reduce((sum, b) => sum + (b.fare || 0), 0) || 0;
   const confirmedBookings = recentBookings?.filter(b => b.status === 'confirmed').length || 0;
+  const avgFare = revenueData && revenueData.length > 0
+    ? Math.round(totalRevenue / revenueData.length)
+    : 0;
+
+  // Build last 7 days revenue chart data
+  const dayLabels = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+  const chartData: { day: string; revenue: number }[] = [];
+  for (let i = 6; i >= 0; i--) {
+    const d = new Date();
+    d.setDate(d.getDate() - i);
+    const dayStr = d.toISOString().split('T')[0];
+    const dayRevenue = (last7DaysBookings || [])
+      .filter(b => b.created_at.split('T')[0] === dayStr)
+      .reduce((sum, b) => sum + (b.fare || 0), 0);
+    chartData.push({ day: dayLabels[d.getDay()], revenue: dayRevenue });
+  }
 
   return (
     <main className="min-h-screen" style={{ background: 'var(--bg-page)', color: 'var(--text-primary)' }}>
@@ -61,12 +83,12 @@ export default async function AdminPage() {
         </div>
 
         {/* Stats Cards */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
           {[
             { label: 'Total Users', value: totalUsers || 0, icon: '👥', accent: 'var(--accent-indigo)', change: 'All registered users' },
             { label: 'Total Bookings', value: totalBookings || 0, icon: '🎫', accent: 'var(--accent-purple)', change: 'All time bookings' },
             { label: 'Total Revenue', value: 'Rs. ' + totalRevenue, icon: '💰', accent: 'var(--accent-green)', change: 'From all bookings' },
-            { label: 'Active Today', value: confirmedBookings, icon: '✅', accent: 'var(--accent-cyan)', change: 'Confirmed bookings' },
+            { label: 'Avg Fare', value: 'Rs. ' + avgFare, icon: '📊', accent: 'var(--accent-cyan)', change: 'Per booking average' },
           ].map((stat) => (
             <div key={stat.label}
               style={{ background: 'var(--bg-stat)', border: '1px solid var(--border-subtle)', borderRadius: '16px', padding: '20px', position: 'relative', overflow: 'hidden' }}>
@@ -79,15 +101,24 @@ export default async function AdminPage() {
           ))}
         </div>
 
+        {/* Revenue Chart */}
+        <div style={{ background: 'var(--bg-stat)', border: '1px solid var(--border-subtle)', borderRadius: '16px', padding: '20px', marginBottom: '24px' }}>
+          <h2 className="font-semibold mb-1 flex items-center gap-2" style={{ color: 'var(--text-primary)' }}>
+            <span>📈</span> Revenue — Last 7 Days
+          </h2>
+          <p style={{ color: 'var(--text-muted)' }} className="text-xs mb-2">Daily booking revenue in rupees</p>
+          <RevenueChart data={chartData} />
+        </div>
+
         {/* Two Column Layout */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
 
           {/* Recent Bookings */}
           <div style={{ background: 'var(--bg-stat)', border: '1px solid var(--border-subtle)', borderRadius: '16px', padding: '20px' }}>
             <h2 className="font-semibold mb-4 flex items-center gap-2" style={{ color: 'var(--text-primary)' }}>
               <span>🎫</span> Recent Bookings
             </h2>
-            <div className="space-y-3">
+            <div className="space-y-3 max-h-72 overflow-y-auto">
               {recentBookings && recentBookings.length > 0 ? (
                 recentBookings.map((booking) => (
                   <div key={booking.id}
@@ -130,7 +161,7 @@ export default async function AdminPage() {
             <h2 className="font-semibold mb-4 flex items-center gap-2" style={{ color: 'var(--text-primary)' }}>
               <span>👥</span> Recent Users
             </h2>
-            <div className="space-y-3">
+            <div className="space-y-3 max-h-72 overflow-y-auto">
               {recentUsers && recentUsers.length > 0 ? (
                 recentUsers.map((user) => (
                   <div key={user.id}
@@ -169,8 +200,36 @@ export default async function AdminPage() {
           </div>
         </div>
 
+        {/* Station Management */}
+        <div style={{ background: 'var(--bg-stat)', border: '1px solid var(--border-subtle)', borderRadius: '16px', padding: '20px', marginBottom: '24px' }}>
+          <h2 className="font-semibold mb-4 flex items-center gap-2" style={{ color: 'var(--text-primary)' }}>
+            <span>🚉</span> Station Management
+          </h2>
+          <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-2 max-h-64 overflow-y-auto">
+            {stations && stations.length > 0 ? (
+              stations.map((s) => (
+                <div
+                  key={s.id}
+                  style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border-subtle)', borderRadius: '8px', padding: '10px' }}
+                  className="flex items-center gap-2"
+                >
+                  <span
+                    style={{
+                      width: '8px', height: '8px', borderRadius: '50%', flexShrink: 0,
+                      background: s.is_interchange ? 'var(--accent-amber)' : 'var(--accent-purple)',
+                    }}
+                  />
+                  <span className="text-xs truncate" style={{ color: 'var(--text-secondary)' }}>{s.name}</span>
+                </div>
+              ))
+            ) : (
+              <p style={{ color: 'var(--text-muted)' }} className="text-sm col-span-full text-center py-4">No stations found</p>
+            )}
+          </div>
+        </div>
+
         {/* Quick Links */}
-        <div className="mt-6 grid grid-cols-3 gap-4">
+        <div className="grid grid-cols-3 gap-4">
           {[
             { label: 'View Metro Map', href: '/map', icon: '🗺️', desc: 'Interactive metro map' },
             { label: 'Route Planner', href: '/planner', icon: '📍', desc: 'Plan routes' },
